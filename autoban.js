@@ -148,17 +148,15 @@ function compare(s1,s2) {
         d[i]= i;
     }
     for(i = 1;i <= len2;i++){
-        let left=i;
+        let left=i,up=i-1;
         for(j = 1;j <= len1;j++) {
-            let cost = s1[i-1] == s2[j-1] ? 0 : 1;
-            d[j-1]= Math.min(d[j]+1,left+1,d[j-1]+cost);
-            left=d[j-1];
+            let cost = s2[i-1] == s1[j-1] ? 0 : 1;
+            left= Math.min(d[j]+1,left+1,up+cost);
+            up=d[j];
+            d[j]=left;
         }
-        d.pop();
-        d.unshift(left);
-        console.log(d);
     }
-    return Math.min(1-d[len2]/len1,1-d[len2]/len2);
+    return Math.min(1-d[len1]/len1,1-d[len1]/len2);
 }
 
 /*过滤函数*/
