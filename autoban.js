@@ -145,22 +145,20 @@ function compare(s1,s2) {
     let d=[];
     let i,j;
     for(i = 0;i <= len1;i++){
-        d[i]=[];
-        d[i][0] = i;
+        d[i]= i;
     }
-    for(j = 0;j <= len2;j++){
-       d[0][j] = j;
-    }
-    for(i = 1;i <= len1;i++){
-        for(j = 1;j <= len2;j++) {
-            let cost = s1[i] == s2[j] ? 0 : 1;
-            let deletion = d[i-1][j] + 1;
-            let insertion = d[i][j-1] + 1;
-            let substitution = d[i-1][j-1] + cost;
-            d[i][j] = Math.min(deletion,insertion,substitution);
+    for(i = 1;i <= len2;i++){
+        let left=i;
+        for(j = 1;j <= len1;j++) {
+            let cost = s1[i-1] == s2[j-1] ? 0 : 1;
+            d[j-1]= Math.min(d[j]+1,left+1,d[j-1]+cost);
+            left=d[j-1];
         }
+        d.pop();
+        d.unshift(left);
+        console.log(d);
     }
-    return Math.min(1-d[len1][len2]/len1,1-d[len1][len2]/len2);
+    return Math.min(1-d[len2]/len1,1-d[len2]/len2);
 }
 
 /*过滤函数*/
