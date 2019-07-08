@@ -12,10 +12,10 @@
 /*语料库功能还不完善，请谨慎使用，不同方法所使用的语料库均不同*/
 
 /*菜单指令 开发者工具中使用*/
-//showStatus()  查看运行情况
-//showBan()     查看封禁情况
-//clearUID(uid)  根据指定uid删除ban_db中数据
-//addCorpus()   将当前ban_db中每个uid的第一条发言不重复的放入当前语料库中
+//autoban.showStatus()  查看运行情况
+//autoban.showBan()     查看封禁情况
+//autoban.clearUID(uid)  根据指定uid删除ban_db中数据
+//autoban.addCorpus()   将当前ban_db中每个uid的第一条发言不重复的放入当前语料库中
 
 const ban_limit=0.7;//弹幕相似率大于ban_limit时自动禁言
 let count_in=0,count_ban=0,count_clear=0;//弹幕入库次数、弹幕封禁次数、清理次数
@@ -318,29 +318,41 @@ function CorpusCheck_equal(){
 }
 
 /*菜单函数*/
-window.showBan=()=>{
-    if(!window.ban_db.length){
-        easy_show('暂无封禁记录哦~')
-    }
-    for(let i in window.ban_db){
-        easy_show(`用户名:${window.ban_db[i][1]} UID:${window.ban_db[i][2]} 封禁时间：${(new Date(window.ban_db[i][0])).toLocaleString()} 最后发言记录：${window.ban_db[i][3][window.ban_db[i][3].length-1][1]}`)
-    }
-}
-window.showStatus=()=>{
-    easy_show('感谢使用自动封禁装置!');
-    easy_show(`装置启动时间：${(new Date(startTime)).toLocaleString()}`);
-    easy_show(`累计弹幕入库次数: ${count_in}`);
-    easy_show(`累计弹幕封禁次数: ${count_ban}`);
-    easy_show(`累计库存清理次数: ${count_clear}`);
-}
-window.clearUID=(uid)=>{
-    for(let i=window.ban_db.length-1;i>-1;i--){
-        if(window.ban_db[i][2]==uid){
-            let user=window.ban_db.splice(i,1);
-            easy_show(`已删除${user[1]}(${user[2]})的封禁记录`);
-            return;
+window.autoban={
+    showBan:()=>{
+        if(!window.ban_db.length){
+            easy_show('暂无封禁记录哦~')
         }
-    }
-    easy_show(`未找到UID为${uid}的封禁记录`);
+        for(let i in window.ban_db){
+            easy_show(`用户名:${window.ban_db[i][1]} UID:${window.ban_db[i][2]} 封禁时间：${(new Date(window.ban_db[i][0])).toLocaleString()} 最后发言记录：${window.ban_db[i][3][window.ban_db[i][3].length-1][1]}`)
+        }
+    },
+    showStatus:()=>{
+        easy_show('感谢使用自动封禁装置!');
+        easy_show(`装置启动时间：${(new Date(startTime)).toLocaleString()}`);
+        easy_show(`累计弹幕入库次数: ${count_in}`);
+        easy_show(`累计弹幕封禁次数: ${count_ban}`);
+        easy_show(`累计库存清理次数: ${count_clear}`);
+    },
+    clearUID:(uid)=>{
+        for(let i=window.ban_db.length-1;i>-1;i--){
+            if(window.ban_db[i][2]==uid){
+                let user=window.ban_db.splice(i,1);
+                easy_show(`已删除${user[1]}(${user[2]})的封禁记录`);
+                return;
+            }
+        }
+        easy_show(`未找到UID为${uid}的封禁记录`);
+    },
+    addCorpus:CorpusCheck_choice.addCorpus,
 }
-window.addCorpus=CorpusCheck_choice.addCorpus;
+
+/*调试函数*/
+window.debug_autoban={
+    saveBanDB:()=>{
+        localStorage.setItem('ban_db',JSON.stringify(window.ban_db));
+    },
+    restoreBanDB:()=>{
+        window.ban_db=JSON.parse(localStorage.getItem('ban_db'))||[];
+    }
+}
