@@ -10,9 +10,9 @@
 
 菜单指令 开发者工具（console）中使用
 
-- showStatus()  查看运行情况
-- showBan()     查看封禁情况
-- clearUID(uid)  根据指定uid删除ban_db中数据
-- addCorpus()   将当前ban_db中每个uid的第一条发言不重复的放入当前语料库中
+- autoban.showStatus()  查看运行情况
+- autoban.showBan()     查看封禁情况
+- autoban.clearUID(uid)  根据指定uid删除ban_db中数据
+- autoban.addCorpus()   将当前ban_db中每个uid的第一条发言不重复的放入当前语料库中
 
 相关配置均在脚本内进行修改即可，基础功能开箱即用。
