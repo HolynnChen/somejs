@@ -223,10 +223,17 @@ function waitCreat(obj,prop,sleep=10){
 }
 
 /*语料库类*/
+
+function deformate(danmu){
+    danmu=danmu.replace(/\d/g,'#');
+    return danmu;
+}
+
 function CorpusCheck_base(maxlimit){
     this.maxlimit=maxlimit;
     this.Corpus=JSON.parse(localStorage.getItem('Corpus_check'))||[];
     this.check=function(danmu){
+        danmu=deformate(danmu);
         for(let i=this.Corpus.length-1;useCorpus&&i>-1;i--){
             if(compare(this.Corpus[i],danmu)>this.maxlimit){
                 return true;
@@ -236,8 +243,9 @@ function CorpusCheck_base(maxlimit){
     };
     this.addCorpus=function(){
         for(let i=0;i<window.ban_db.length;i++){
-            if(this.Corpus.indexOf(window.ban_db[i][3][0][1])==-1){
-                this.Corpus.push(window.ban_db[i][3][0][1]);
+            let danmu=deformate(window.ban_db[i][3][0][1]);
+            if(this.Corpus.indexOf(danmu)==-1){
+                this.Corpus.push(danmu);
             }
         }
         localStorage.setItem('Corpus_check',JSON.stringify(this.Corpus));
@@ -255,8 +263,10 @@ function CorpusCheck_lost(maxlost){//数量容易过大，建议损失要控制�
             let secondresult=[];
             let tempsave={};
             for(let j of tempresult){
-                let thelength=j.length
+                let thelength=j.length,lastone;
                 for(let z=0;z<thelength;z++){
+                    if(j[z]==lastone)continue;
+                    lastone=j[z];
                     let theone=j.substring(0,z)+j.substring(z+1);
                     if(tempsave[theone])continue;
                     tempsave[theone]=true;
@@ -268,6 +278,7 @@ function CorpusCheck_lost(maxlost){//数量容易过大，建议损失要控制�
         }
     };
     this.check=function(danmu){//随机损失法
+        danmu=deformate(danmu);
         for(let i of this.getLostString(danmu,~~(this.maxlost*danmu.length))){
             if(this.Corpus[i]){
                 return true
@@ -278,7 +289,7 @@ function CorpusCheck_lost(maxlost){//数量容易过大，建议损失要控制�
     this.addCorpus=function(){
         let tempsave={};
         for(let i=0;i<window.ban_db.length;i++){
-            let danmu=window.ban_db[i][3][0][1];
+            let danmu=deformate(window.ban_db[i][3][0][1]);
             if(tempsave[danmu])continue;
             tempsave[danmu]=true;
             for(let i of this.getLostString(danmu,~~(this.maxlost*danmu.length)))this.Corpus[i]=true;
@@ -290,13 +301,14 @@ function CorpusCheck_lost(maxlost){//数量容易过大，建议损失要控制�
 function CorpusCheck_equal(){
     this.Corpus=JSON.parse(localStorage.getItem('Corpus_equal'))||{};
     this.check=function(danmu){
+        danmu=deformate(danmu);
         if(this.Corpus[danmu])return true;
         return false;
     }
     this.addCorpus=function(){
         let tempsave={};
         for(let i=0;i<window.ban_db.length;i++){
-            let danmu=window.ban_db[i][3][0][1];
+            let danmu=deformate(window.ban_db[i][3][0][1]);
             if(tempsave[danmu])continue;
             tempsave[danmu]=true;
             this.Corpus[danmu]=true;
