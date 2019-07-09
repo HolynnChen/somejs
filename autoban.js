@@ -97,7 +97,6 @@ function main() {
                                 if(i>2 && allcompare>ban_limit)break;
                             }
                             if(allcompare>ban_limit){
-                                if(prepareDelete[uid])continue;
                                 ban_user(uid,name);
                             }
                         }
@@ -121,6 +120,7 @@ function main() {
     },timeRange);
     //内部函数
     function ban_user(uid,name=''){
+        if(prepareDelete[uid])return;
         prepareDelete[uid]=true;
         count_ban++;
         show(`自动禁言${name}(${uid})`)
