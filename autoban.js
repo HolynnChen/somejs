@@ -19,14 +19,14 @@
 
 const ban_limit=0.7;//弹幕相似率大于ban_limit时自动禁言
 let count_in=0,count_ban=0,count_clear=0;//弹幕入库次数、弹幕封禁次数、清理次数
-const startCheck=3;//一分钟内长弹幕数量大于startCheck开始检测（不含startCheck）
+const startCheck=3;//timeRange内长弹幕数量大于startCheck开始检测（不含startCheck）
 const timeRange=20000;//只统计timeRange这段时间内的弹幕
 const useCorpus=false;//是否启用语料库
 const filterList=[filter1,filter2];//匹配过滤函数，若其中一个返回true都认为是正常弹幕，针对B站默认采用filter1与filter2
 const CorpusCheck_choice=new CorpusCheck_base(0.85);//选择语料库函数进行快速封禁，有下述方法
-//CorpusCheck_base 相似度匹配 参数 匹配度下限     特点：根据编辑距离计算相似度，结构为数组，每次都对语料库进行由新到旧的compare，因此前期快，封禁数量上升后慢
-//CorpusCheck_lost 随机损失法 参数 损失度上限     特点：使用随机损失法做字典，因此储存占用较大，损失度越大每次操作耗时越大，但每次操作的耗时都是相对固定的
-//CorpusCheck_equal 精确匹配法 参数 无            特点：使用原封禁弹幕做字典，内存占用小，对广告有一定变形机制作用较小(指非混淆的第一句弹幕)，但几乎不耗时
+//CorpusCheck_base  相似度匹配 参数 匹配度下限     特点：根据编辑距离计算相似度，结构为数组，每次都对语料库进行由新到旧的compare，因此前期快，封禁数量上升后慢
+//CorpusCheck_lost  随机损失法 参数 损失度上限     特点：使用随机损失法做字典，因此储存占用较大，损失度越大每次操作耗时越大，但每次操作的耗时都是相对固定的
+//CorpusCheck_equal 精确匹配法 参数 无             特点：使用原封禁弹幕做字典，内存占用小，对广告有一定变形机制作用较小(指非混淆的第一句弹幕)，但几乎不耗时
 const filter1_config=0.75;//弹幕内同一字符占弹幕长度的分数，大于该值视为正常弹幕
 const filter2_config=[];//含有数组内的子字符串的均视为正常弹幕
 
@@ -74,6 +74,12 @@ function main() {
                             if(filterCheck(danmu))continue doOne;
                         }
                         // 例外规则结束
+                        if(!window.globalSaver[uid]){
+                            window.globalSaver[uid]=[]
+                        }
+                        let nowtime=Date.now();
+                        window.globalSaver[uid].push([nowtime,danmu]);
+                        window.globalSaver[uid]=window.globalSaver[uid].filter((item)=>nowtime-item[0]<timeRange);
                         // 查询语料库
                         if(useCorpus){
                             if(CorpusCheck_choice.check(danmu)){
@@ -82,12 +88,6 @@ function main() {
                             }
                         }
                         // 查询语料库结束
-                        if(!window.globalSaver[uid]){
-                            window.globalSaver[uid]=[]
-                        }
-                        let nowtime=Date.now();
-                        window.globalSaver[uid].push([nowtime,danmu]);
-                        window.globalSaver[uid]=window.globalSaver[uid].filter((item)=>nowtime-item[0]<timeRange);
                         let deleteMark=true,temp_length=window.globalSaver[uid].length;
                         if(temp_length>startCheck){
                             if(prepareDelete[uid])continue;
@@ -221,11 +221,17 @@ function waitCreat(obj,prop,sleep=10){
         },sleep)
     })
 }
-
+String.prototype.map=function(f){return Array.from(this).map(f).join('');}
 /*语料库类*/
 
 function deformate(danmu){
-    danmu=danmu.replace(/\d/g,'#');
+    danmu=danmu.map((a)=>{
+        let code=a.charCodeAt();
+        if(code==12288)return '';
+        if(code>65280 &&code<65375)return String.fromCharCode(code-65248);
+        return a;
+    });
+    danmu=danmu.toLowerCase().replace(/\d/g,'#').replace(/ /g,'');
     return danmu;
 }
 
@@ -292,6 +298,7 @@ function CorpusCheck_lost(maxlost){//数量容易过大，建议损失要控制�
             let danmu=deformate(window.ban_db[i][3][0][1]);
             if(tempsave[danmu])continue;
             tempsave[danmu]=true;
+            console.log(this.getLostString(danmu,~~(this.maxlost*danmu.length)));
             for(let i of this.getLostString(danmu,~~(this.maxlost*danmu.length)))this.Corpus[i]=true;
         }
         localStorage.setItem('Corpus_lost',JSON.stringify(this.Corpus));
@@ -344,7 +351,7 @@ window.autoban={
         }
         easy_show(`未找到UID为${uid}的封禁记录`);
     },
-    addCorpus:CorpusCheck_choice.addCorpus,
+    addCorpus:()=>{CorpusCheck_choice.addCorpus()},
 }
 
 /*调试函数*/
