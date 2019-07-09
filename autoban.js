@@ -237,7 +237,7 @@ function deformate(danmu){
 
 function CorpusCheck_base(maxlimit){
     this.maxlimit=maxlimit;
-    this.Corpus=JSON.parse(localStorage.getItem('Corpus_check'))||[];
+    this.Corpus=JSON.parse(localStorage.getItem('Corpus_base'))||[];
     this.check=function(danmu){
         danmu=deformate(danmu);
         for(let i=this.Corpus.length-1;useCorpus&&i>-1;i--){
@@ -254,7 +254,8 @@ function CorpusCheck_base(maxlimit){
                 this.Corpus.push(danmu);
             }
         }
-        localStorage.setItem('Corpus_check',JSON.stringify(this.Corpus));
+        localStorage.setItem('Corpus_base',JSON.stringify(this.Corpus));
+        easy_show('已添加到Corpus_base语料库');
     }
 }
 
@@ -302,6 +303,7 @@ function CorpusCheck_lost(maxlost){//数量容易过大，建议损失要控制�
             for(let i of this.getLostString(danmu,~~(this.maxlost*danmu.length)))this.Corpus[i]=true;
         }
         localStorage.setItem('Corpus_lost',JSON.stringify(this.Corpus));
+        easy_show('已添加到Corpus_lost语料库');
     }
 }
 
@@ -321,6 +323,7 @@ function CorpusCheck_equal(){
             this.Corpus[danmu]=true;
         }
         localStorage.setItem('Corpus_equal',JSON.stringify(this.Corpus));
+        easy_show('已添加到Corpus_equal语料库');
     }
 }
 
