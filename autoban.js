@@ -19,14 +19,15 @@
 
 const ban_limit=0.7;//弹幕相似率大于ban_limit时自动禁言
 let count_in=0,count_ban=0,count_clear=0;//弹幕入库次数、弹幕封禁次数、清理次数
-const startCheck=3;//timeRange内长弹幕数量大于startCheck开始检测（不含startCheck）
+const startCheck=2;//timeRange内长弹幕数量大于startCheck开始检测（不含startCheck）
 const timeRange=20000;//只统计timeRange这段时间内的弹幕
-const useCorpus=false;//是否启用语料库
+const useCorpus=true;//是否启用语料库
 const filterList=[filter1,filter2];//匹配过滤函数，若其中一个返回true都认为是正常弹幕，针对B站默认采用filter1与filter2
-const CorpusCheck_choice=new CorpusCheck_base(0.85);//选择语料库函数进行快速封禁，有下述方法
+const CorpusCheck_choice=new CorpusCheck_special(0.7,(uid)=>{return uid>400000000});//选择语料库函数进行快速封禁，有下述方法
 //CorpusCheck_base  相似度匹配 参数 匹配度下限     特点：根据编辑距离计算相似度，结构为数组，每次都对语料库进行由新到旧的compare，因此前期快，封禁数量上升后慢
 //CorpusCheck_lost  随机损失法 参数 损失度上限     特点：使用随机损失法做字典，因此储存占用较大，损失度越大每次操作耗时越大，但每次操作的耗时都是相对固定的
 //CorpusCheck_equal 精确匹配法 参数 无             特点：使用原封禁弹幕做字典，内存占用小，对广告有一定变形机制作用较小(指非混淆的第一句弹幕)，但几乎不耗时
+//CorpusCheck_special 相似度匹配_B站特别版 参数 匹配度下限，uid匹配函数（默认>400000000） 特点：B站广告君uid几乎都大于400000000，从这一点出发可以大幅度减少检测匹配
 const filter1_config=0.75;//弹幕内同一字符占弹幕长度的分数，大于该值视为正常弹幕
 const filter2_config=[];//含有数组内的子字符串的均视为正常弹幕
 
@@ -34,6 +35,8 @@ const startTime=Date.now();
 const csrf=getCookie('bili_jct');// use for ban
 let RoomLongID;//window.BilibiliLive.ROOMID
 let RoomShortID;//window.BilibiliLive.SHORT_ROOMID
+let ReplaceDict={};
+const ReplaceDictText='ÀÁÂÃÄÅàáâãäåĀāĂăĄąȀȁȂȃȦȧɑΆΑάαАаӐӑӒӓ:a;ƀƁƂƃƄƅɃʙΒβВЬвЪъьѢѣҌҍ:b;ÇçĆćĈĉĊċČčƇƈϲϹСсҪҫ:c;ÐĎďĐđƉƊƋƌȡɖɗ:d;ÈÉÊËèéêëĒēĔĕĖėĘęĚěȄȅȆȇȨȩɐΈΕЀЁЕеѐёҼҽҾҿӖӗ:e;Ƒƒƭ:f;ĜĝĞğĠġĢģƓɠɡɢʛԌԍ:g;ĤĥĦħȞȟʜɦʰʱΉΗНнћҢңҤҺһӇӈӉӊԊԋ:h;ÌÍÎÏìíîïĨĩĪīĬĭĮįİıƗȈȉȊȋɪΊΙΪϊії:i;ĴĵʲͿϳ:j;ĶķĸƘƙΚκϏЌКкќҚқҜҝҞҟҠҡԞԟ:k;ĹĺĻļĽľĿŀŁłȴɭʟӏ:l;ɱʍΜϺϻМмӍӎ:m;ÑñŃńŅņŇňŉŊŋƝƞȵɴΝηПп:n;ÒÓÔÕÖòóôõöŌōŎŏŐőơƢȌȍȎȏȪȫȬȭȮȯȰȱΌΟοόОоӦӧ:o;ƤΡρϼРр:p;ɊɋԚԛ:q;ŔŕŖŗŘřƦȐȑȒȓɌɍʀʳг:r;ŚśŜŝŞşŠšȘșȿЅѕ:s;ŢţŤťŦŧƫƬƮȚțͲͳΤТтҬҭ:t;ÙÚÛÜùúûŨũŪūŬŭŮůŰűŲųƯưƱȔȕȖȗ:u;ƔƲʋνυϋύΰѴѵѶѷ:v;ŴŵƜɯɰʷωώϢϣШЩшщѡѿԜԝ:w;ΧχХхҲҳӼӽ:x;ÝýÿŶŷŸƳƴȲȳɎɏʏʸΎΥΫϒϓϔЎУуўҮүӮӯӰӱӲӳ:y;ŹźŻżŽžƵƶȤȥʐʑΖ:z';
 
 //初始化工作
 (async ()=>{
@@ -41,6 +44,10 @@ let RoomShortID;//window.BilibiliLive.SHORT_ROOMID
     RoomLongID=await waitCreat(window.BilibiliLive,'ROOMID');
     RoomShortID=await waitCreat(window.BilibiliLive,'SHORT_ROOMID');
     show('机器人自动封禁装置初始化中...');
+    for(let i of ReplaceDictText.split(';')){
+        let [keys,value]=i.split(':');
+        for(let j of keys)ReplaceDict[j]=value;
+    }
     let res=await fetch('https://api.live.bilibili.com/live_user/v1/UserInfo/get_info_in_room?roomid='+RoomLongID,{credentials: "include"});
     res=await res.json();
     if(res.code==0){
@@ -82,7 +89,7 @@ function main() {
                         window.globalSaver[uid]=window.globalSaver[uid].filter((item)=>nowtime-item[0]<timeRange);
                         // 查询语料库
                         if(useCorpus){
-                            if(CorpusCheck_choice.check(danmu)){
+                            if(CorpusCheck_choice.check(danmu,uid)){
                                 ban_user(uid,name);
                                 continue;
                             }
@@ -226,9 +233,18 @@ String.prototype.map=function(f){return Array.from(this).map(f).join('');}
 
 function deformate(danmu){
     danmu=danmu.map((a)=>{
+        if(ReplaceDict[a])a=ReplaceDict[a];
         let code=a.charCodeAt();
         if(code==12288)return '';
         if(code>65280 &&code<65375)return String.fromCharCode(code-65248);
+        if (code >= 0x0030 && code <= 0x0039 ||
+            code >= 0x2460 && code <= 0x249b ||
+            code >= 0x3220 && code <= 0x3229 ||
+            code >= 0x3248 && code <= 0x324f ||
+            code >= 0x3251 && code <= 0x325f ||
+            code >= 0x3280 && code <= 0x3289 ||
+            code >= 0x32b1 && code <= 0x32bf ||
+            code >= 0xff10 && code <= 0xff19)return '#';
         return a;
     });
     danmu=danmu.toLowerCase().replace(/\d/g,'#').replace(/ /g,'');
@@ -240,7 +256,7 @@ function CorpusCheck_base(maxlimit){
     this.Corpus=JSON.parse(localStorage.getItem('Corpus_base'))||[];
     this.check=function(danmu){
         danmu=deformate(danmu);
-        for(let i=this.Corpus.length-1;useCorpus&&i>-1;i--){
+        for(let i=this.Corpus.length-1;i>-1;i--){
             if(compare(this.Corpus[i],danmu)>this.maxlimit){
                 return true;
             }
@@ -248,14 +264,25 @@ function CorpusCheck_base(maxlimit){
         return false;
     };
     this.addCorpus=function(){
+        let success_count=0;
         for(let i=0;i<window.ban_db.length;i++){
-            let danmu=deformate(window.ban_db[i][3][0][1]);
-            if(this.Corpus.indexOf(danmu)==-1){
-                this.Corpus.push(danmu);
-            }
+            let danmu=window.ban_db[i][3][0][1];
+            let result=this.check(danmu);
+            if(result)continue;
+            success_count++;
+            this.Corpus.push(deformate(danmu));
         }
         localStorage.setItem('Corpus_base',JSON.stringify(this.Corpus));
-        easy_show('已添加到Corpus_base语料库');
+        easy_show(`已添加${success_count}条新记录到Corpus_base语料库`);
+    }
+}
+
+function CorpusCheck_special(maxlimit,uidcheck){//共享Corpus_base语料库
+    CorpusCheck_base.call(this,maxlimit);
+    let bak=this.check;
+    this.check=function(danmu,uid){
+        if(uid&&uidcheck&&!uidcheck(uid))return false;
+        return bak.call(this,danmu)
     }
 }
 
@@ -347,7 +374,7 @@ window.autoban={
     clearUID:(uid)=>{
         for(let i=window.ban_db.length-1;i>-1;i--){
             if(window.ban_db[i][2]==uid){
-                let user=window.ban_db.splice(i,1);
+                let user=window.ban_db.splice(i,1)[0];
                 easy_show(`已删除${user[1]}(${user[2]})的封禁记录`);
                 return;
             }
