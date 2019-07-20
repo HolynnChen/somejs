@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         自动封禁装置，启动！
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  再见了！广告君
 // @author       holynnchen
 // @match        https://live.bilibili.com/*
@@ -14,8 +14,9 @@
 /*菜单指令 开发者工具中使用*/
 //autoban.showStatus()  查看运行情况
 //autoban.showBan()     查看封禁情况
-//autoban.clearUID(uid)  根据指定uid删除ban_db中数据
+//autoban.clearUID(uid) 根据指定uid删除ban_db中数据
 //autoban.addCorpus()   将当前ban_db中每个uid的第一条发言不重复的放入当前语料库中
+//autoban.allReport()   一键举报所有被封禁用户
 
 const ban_limit=0.7;//弹幕相似率大于ban_limit时自动禁言
 let count_in=0,count_ban=0,count_clear=0;//弹幕入库次数、弹幕封禁次数、清理次数
@@ -70,9 +71,9 @@ function main() {
     window.ban_db=[];
     let prepareDelete={};
     let globalObserver=new MutationObserver((mutations)=>{
-        doOne:for(let i of mutations){
+        for(let i of mutations){
             if(i.addedNodes.length!=0){
-                for(let j of i.addedNodes){
+                doOne:for(let j of i.addedNodes){
                     if(j.dataset.danmaku&&j.dataset.danmaku.length>9){
                         count_in++;
                         let uid=j.dataset.uid,name=j.dataset.uname,danmu=j.dataset.danmaku;
@@ -90,7 +91,7 @@ function main() {
                         // 查询语料库
                         if(useCorpus){
                             if(CorpusCheck_choice.check(danmu,uid)){
-                                ban_user(uid,name);
+                                ban_user(uid,name,j.dataset.ct,j.dataset.ts);
                                 continue;
                             }
                         }
@@ -104,7 +105,7 @@ function main() {
                                 if(i>2 && allcompare>ban_limit)break;
                             }
                             if(allcompare>ban_limit){
-                                ban_user(uid,name);
+                                ban_user(uid,name,j.dataset.ct,j.dataset.ts);
                             }
                         }
                     }
@@ -126,12 +127,13 @@ function main() {
         }
     },timeRange);
     //内部函数
-    function ban_user(uid,name=''){
+    function ban_user(uid,name='',ct=null,ts=null){
         if(prepareDelete[uid])return;
         prepareDelete[uid]=true;
         count_ban++;
-        show(`自动禁言${name}(${uid})`)
-        let savetemp=deepCopy(window.globalSaver[uid])
+        show(`自动禁言${name}(${uid})`);
+        ts=ts||Date.now();
+        window.ban_db.push([Number(ts)*1000,name,uid,deepCopy(window.globalSaver[uid]),ct]);
         fetch('https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user',
               {method:'POST',
                credentials: "include",
@@ -140,8 +142,7 @@ function main() {
             .then(res=>res.json())
             .then(res=>{
             if(res.code==0){
-                window.ban_db.push([Date.now(),name,uid,savetemp]);
-                delete prepareDelete[uid];
+                //delete prepareDelete[uid];
             }
         })
     }
@@ -229,6 +230,22 @@ function waitCreat(obj,prop,sleep=10){
     })
 }
 String.prototype.map=function(f){return Array.from(this).map(f).join('');}
+
+async function allAwait(arr){
+    let rs=[];
+    for(let i=0;i<arr.length;i++){
+        rs.push(await arr)
+    }
+    return rs
+}
+async function report(uid,msg,ts,ct){
+    let res=await fetch('https://api.live.bilibili.com/room_ex/v1/Danmu/danmuReport',
+              {method:'POST',
+               credentials: "include",
+               headers:{'Content-Type':'application/x-www-form-urlencoded'},
+               body:createFormData({roomid:RoomLongID,uid:uid,msg:msg,reason:'垃圾广告',ts:ts,sign:ct,csrf_token:csrf,csrf:csrf})})
+    return await res.json()
+}
 /*语料库类*/
 
 function deformate(danmu){
@@ -247,7 +264,7 @@ function deformate(danmu){
             code >= 0xff10 && code <= 0xff19)return '#';
         return a;
     });
-    danmu=danmu.toLowerCase().replace(/\d/g,'#').replace(/ /g,'');
+    danmu=danmu.toLowerCase().replace(/o/g,'0').replace(/\d/g,'#').replace(/[.|/\@~*&^ ]/g,'');
     return danmu;
 }
 
@@ -267,13 +284,16 @@ function CorpusCheck_base(maxlimit){
         let success_count=0;
         for(let i=0;i<window.ban_db.length;i++){
             let danmu=window.ban_db[i][3][0][1];
-            let result=this.check(danmu);
-            if(result)continue;
-            success_count++;
-            this.Corpus.push(deformate(danmu));
+            if(this.addSingle(danmu))success_count++;
         }
         localStorage.setItem('Corpus_base',JSON.stringify(this.Corpus));
         easy_show(`已添加${success_count}条新记录到Corpus_base语料库`);
+    };
+    this.addSingle=function(danmu){
+        let result=this.check(danmu);
+        if(result)return false;
+        this.Corpus.push(deformate(danmu));
+        return true;
     }
 }
 
@@ -382,6 +402,13 @@ window.autoban={
         easy_show(`未找到UID为${uid}的封禁记录`);
     },
     addCorpus:()=>{CorpusCheck_choice.addCorpus()},
+    allReport:()=>{
+        let waitArr=[]
+        for(let i in window.ban_db){
+            waitArr.push(report(window.ban_db[i][2],window.ban_db[i][3][window.ban_db[i][3].length-1][1],window.ban_db[i][0]/1000,window.ban_db[i][4]))
+        }
+        allAwait(waitArr).then((result)=>{easy_show('全部举报完毕');console.log(result)})
+    }
 }
 
 /*调试函数*/
