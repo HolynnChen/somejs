@@ -16,7 +16,7 @@
 //autoban.showBan()     查看封禁情况
 //autoban.clearUID(uid) 根据指定uid删除ban_db中数据
 //autoban.addCorpus()   将当前ban_db中每个uid的第一条发言不重复的放入当前语料库中
-//autoban.allReport()   一键举报所有被封禁用户
+//autoban.allReport()   一键举报所有被封禁用户，同时加入封禁窗口
 
 const ban_limit=0.7;//弹幕相似率大于ban_limit时自动禁言
 let count_in=0,count_ban=0,count_clear=0;//弹幕入库次数、弹幕封禁次数、清理次数
@@ -24,6 +24,7 @@ const startCheck=2;//timeRange内长弹幕数量大于startCheck开始检测（�
 const timeRange=20000;//只统计timeRange这段时间内的弹幕
 const useCorpus=true;//是否启用语料库
 const filterList=[filter1,filter2];//匹配过滤函数，若其中一个返回true都认为是正常弹幕，针对B站默认采用filter1与filter2
+const filterBanList=[ban_filter1,ban_filter2];
 const CorpusCheck_choice=new CorpusCheck_special(0.7,(uid)=>{return uid>400000000});//选择语料库函数进行快速封禁，有下述方法
 //CorpusCheck_base  相似度匹配 参数 匹配度下限     特点：根据编辑距离计算相似度，结构为数组，每次都对语料库进行由新到旧的compare，因此前期快，封禁数量上升后慢
 //CorpusCheck_lost  随机损失法 参数 损失度上限     特点：使用随机损失法做字典，因此储存占用较大，损失度越大每次操作耗时越大，但每次操作的耗时都是相对固定的
@@ -31,13 +32,15 @@ const CorpusCheck_choice=new CorpusCheck_special(0.7,(uid)=>{return uid>40000000
 //CorpusCheck_special 相似度匹配_B站特别版 参数 匹配度下限，uid匹配函数（默认>400000000） 特点：B站广告君uid几乎都大于400000000，从这一点出发可以大幅度减少检测匹配
 const filter1_config=0.75;//弹幕内同一字符占弹幕长度的分数，大于该值视为正常弹幕
 const filter2_config=[];//含有数组内的子字符串的均视为正常弹幕
+const ban_filter1_config=['扣群'];//若用户在时间区域内发数组内子字符串两次直接封禁
+const ban_filter2_config=5;//窗口最大上限
 
 const startTime=Date.now();
 const csrf=getCookie('bili_jct');// use for ban
 let RoomLongID;//window.BilibiliLive.ROOMID
 let RoomShortID;//window.BilibiliLive.SHORT_ROOMID
 let ReplaceDict={};
-const ReplaceDictText='ÀÁÂÃÄÅàáâãäåĀāĂăĄąȀȁȂȃȦȧɑΆΑάαАаӐӑӒӓ:a;ƀƁƂƃƄƅɃʙΒβВЬвЪъьѢѣҌҍ:b;ÇçĆćĈĉĊċČčƇƈϲϹСсҪҫ:c;ÐĎďĐđƉƊƋƌȡɖɗ:d;ÈÉÊËèéêëĒēĔĕĖėĘęĚěȄȅȆȇȨȩɐΈΕЀЁЕеѐёҼҽҾҿӖӗ:e;Ƒƒƭ:f;ĜĝĞğĠġĢģƓɠɡɢʛԌԍ:g;ĤĥĦħȞȟʜɦʰʱΉΗНнћҢңҤҺһӇӈӉӊԊԋ:h;ÌÍÎÏìíîïĨĩĪīĬĭĮįİıƗȈȉȊȋɪΊΙΪϊії:i;ĴĵʲͿϳ:j;ĶķĸƘƙΚκϏЌКкќҚқҜҝҞҟҠҡԞԟ:k;ĹĺĻļĽľĿŀŁłȴɭʟӏ:l;ɱʍΜϺϻМмӍӎ:m;ÑñŃńŅņŇňŉŊŋƝƞȵɴΝηПп:n;ÒÓÔÕÖòóôõöŌōŎŏŐőơƢȌȍȎȏȪȫȬȭȮȯȰȱΌΟοόОоӦӧ:o;ƤΡρϼРр:p;ɊɋԚԛ:q;ŔŕŖŗŘřƦȐȑȒȓɌɍʀʳг:r;ŚśŜŝŞşŠšȘșȿЅѕ:s;ŢţŤťŦŧƫƬƮȚțͲͳΤТтҬҭ:t;ÙÚÛÜùúûŨũŪūŬŭŮůŰűŲųƯưƱȔȕȖȗ:u;ƔƲʋνυϋύΰѴѵѶѷ:v;ŴŵƜɯɰʷωώϢϣШЩшщѡѿԜԝ:w;ΧχХхҲҳӼӽ:x;ÝýÿŶŷŸƳƴȲȳɎɏʏʸΎΥΫϒϓϔЎУуўҮүӮӯӰӱӲӳ:y;ŹźŻżŽžƵƶȤȥʐʑΖ:z';
+const ReplaceDictText='ÀÁÂÃÄÅàáâãäåĀāĂăĄąȀȁȂȃȦȧɑΆΑάαАаӐӑӒӓ:a;ƀƁƂƃƄƅɃʙΒβВЬвЪъьѢѣҌҍ:b;ÇçĆćĈĉĊċČčƇƈϲϹСсҪҫ:c;ÐĎďĐđƉƊƋƌȡɖɗ:d;ÈÉÊËèéêëĒēĔĕĖėĘęĚěȄȅȆȇȨȩɐΈΕЀЁЕеѐёҼҽҾҿӖӗ:e;Ƒƒƭ:f;ĜĝĞğĠġĢģƓɠɡɢʛԌԍ:g;ĤĥĦħȞȟʜɦʰʱΉΗНнћҢңҤҺһӇӈӉӊԊԋ:h;ÌÍÎÏìíîïĨĩĪīĬĭĮįİıƗȈȉȊȋɪΊΙΪϊії:i;ĴĵʲͿϳ:j;ĶķĸƘƙΚκϏЌКкќҚқҜҝҞҟҠҡԞԟ:k;ĹĺĻļĽľĿŀŁłȴɭʟӏ:l;ɱʍΜϺϻМмӍӎ:m;ÑñŃńŅņŇňŉŊŋƝƞȵɴΝηПп:n;ÒÓÔÕÖòóôõöŌōŎŏŐőơƢȌȍȎȏȪȫȬȭȮȯȰȱΌΟοόОоӦӧ:o;ƤΡρϼРр:p;ɊɋԚԛ:q;ŔŕŖŗŘřƦȐȑȒȓɌɍʀʳг:r;ŚśŜŝŞşŠšȘșȿЅѕ:s;ŢţŤťŦŧƫƬƮȚțͲͳΤТтҬҭ:t;ÙÚÛÜùúûŨũŪūŬŭŮůŰűŲųƯưƱȔȕȖȗ:u;ƔƲʋνυϋύΰѴѵѶѷ:v;ŴŵƜɯɰʷωώϢϣШЩшщѡѿԜԝ:w;ΧχХхҲҳӼӽ:x;ÝýÿŶŷŸƳƴȲȳɎɏʏʸΎΥΫϒϓϔЎУуўҮүӮӯӰӱӲӳ:y;ŹźŻżŽžƵƶȤȥʐʑΖ:z;o:0;∃э:3;➏:6;┑┐┓:7;╬╪:+';
 
 //初始化工作
 (async ()=>{
@@ -69,6 +72,7 @@ function main() {
     if(window.globalObserver)globalObserver.disconnect();
     window.globalSaver={};
     window.ban_db=[];
+    window.ban_db_window=[];
     let prepareDelete={};
     let globalObserver=new MutationObserver((mutations)=>{
         for(let i of mutations){
@@ -82,6 +86,12 @@ function main() {
                             if(filterCheck(danmu))continue doOne;
                         }
                         // 例外规则结束
+                        for(let filterCheck of filterBanList){
+                            if(filterCheck(danmu,uid)){
+                                ban_user(uid,name,j.dataset.ct,j.dataset.ts);
+                                continue doOne;
+                            }
+                        }
                         if(!window.globalSaver[uid]){
                             window.globalSaver[uid]=[]
                         }
@@ -185,6 +195,28 @@ function filter2(s){
     }
     return false;
 }
+function ban_filter1(s,uid){
+    if(window.globalSaver[uid]&& window.globalSaver[uid].length>0){
+        for(let i of ban_filter1_config){
+            if(s.indexOf(i)>-1){
+                for(let j of ban_filter1_config){
+                    if(window.globalSaver[uid][0].indexOf(j)>-1){
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+function ban_filter2(s){
+    for(let i=window.ban_db_window.length-1;i>-1;i--){
+        if(compare(s,window.ban_db_window[i])>0.55){
+            return true;
+        }
+    }
+    return false;
+}
 
 /*工具函数*/
 function getCookie(name){
@@ -264,7 +296,7 @@ function deformate(danmu){
             code >= 0xff10 && code <= 0xff19)return '#';
         return a;
     });
-    danmu=danmu.toLowerCase().replace(/o/g,'0').replace(/\d/g,'#').replace(/[.|/\@~*&^ ]/g,'');
+    danmu=danmu.toLowerCase().replace(/\d/g,'#').replace(/[.|/\@~*&^ +-]/g,'');
     return danmu;
 }
 
@@ -405,8 +437,14 @@ window.autoban={
     allReport:()=>{
         let waitArr=[]
         for(let i in window.ban_db){
-            waitArr.push(report(window.ban_db[i][2],window.ban_db[i][3][window.ban_db[i][3].length-1][1],window.ban_db[i][0]/1000,window.ban_db[i][4]))
+            waitArr.push(report(window.ban_db[i][2],window.ban_db[i][3][window.ban_db[i][3].length-1][1],window.ban_db[i][0]/1000,window.ban_db[i][4]));
+            let temp=window.ban_db[i][3][0][1];
+            if(!ban_filter2(temp)){
+                if(window.ban_db_window.length>=ban_filter2_config)window.ban_db_window.shift();
+                window.ban_db_window.push(temp);
+            }
         }
+        window.ban_db=[];
         allAwait(waitArr).then((result)=>{easy_show('全部举报完毕');console.log(result)})
     }
 }
@@ -418,5 +456,6 @@ window.debug_autoban={
     },
     restoreBanDB:()=>{
         window.ban_db=JSON.parse(localStorage.getItem('ban_db'))||[];
-    }
+    },
+    deformate:deformate
 }
