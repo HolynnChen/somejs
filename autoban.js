@@ -40,7 +40,14 @@ const csrf=getCookie('bili_jct');// use for ban
 let RoomLongID;//window.BilibiliLive.ROOMID
 let RoomShortID;//window.BilibiliLive.SHORT_ROOMID
 let ReplaceDict={};
-const ReplaceDictText='ÀÁÂÃÄÅàáâãäåĀāĂăĄąȀȁȂȃȦȧɑΆΑάαАаӐӑӒӓ:a;ƀƁƂƃƄƅɃʙΒβВЬвЪъьѢѣҌҍ:b;ÇçĆćĈĉĊċČčƇƈϲϹСсҪҫ:c;ÐĎďĐđƉƊƋƌȡɖɗ:d;ÈÉÊËèéêëĒēĔĕĖėĘęĚěȄȅȆȇȨȩɐΈΕЀЁЕеѐёҼҽҾҿӖӗ:e;Ƒƒƭ:f;ĜĝĞğĠġĢģƓɠɡɢʛԌԍ:g;ĤĥĦħȞȟʜɦʰʱΉΗНнћҢңҤҺһӇӈӉӊԊԋ:h;ÌÍÎÏìíîïĨĩĪīĬĭĮįİıƗȈȉȊȋɪΊΙΪϊії:i;ĴĵʲͿϳ:j;ĶķĸƘƙΚκϏЌКкќҚқҜҝҞҟҠҡԞԟ:k;ĹĺĻļĽľĿŀŁłȴɭʟӏ:l;ɱʍΜϺϻМмӍӎ:m;ÑñŃńŅņŇňŉŊŋƝƞȵɴΝηПп:n;ÒÓÔÕÖòóôõöŌōŎŏŐőơƢȌȍȎȏȪȫȬȭȮȯȰȱΌΟοόОоӦӧ:o;ƤΡρϼРр:p;ɊɋԚԛ:q;ŔŕŖŗŘřƦȐȑȒȓɌɍʀʳг:r;ŚśŜŝŞşŠšȘșȿЅѕ:s;ŢţŤťŦŧƫƬƮȚțͲͳΤТтҬҭ:t;ÙÚÛÜùúûŨũŪūŬŭŮůŰűŲųƯưƱȔȕȖȗ:u;ƔƲʋνυϋύΰѴѵѶѷ:v;ŴŵƜɯɰʷωώϢϣШЩшщѡѿԜԝ:w;ΧχХхҲҳӼӽ:x;ÝýÿŶŷŸƳƴȲȳɎɏʏʸΎΥΫϒϓϔЎУуўҮүӮӯӰӱӲӳ:y;ŹźŻżŽžƵƶȤȥʐʑΖ:z;o:0;∃э:3;➏:6;┑┐┓:7;╬╪:+';
+const ReplaceDictText='ÀÁÂÃÄÅàáâãäåĀāĂăĄąȀȁȂȃȦȧɑΆΑάαАаӐӑӒӓ:a;ƀƁƂƃƄƅɃʙΒβВЬвЪъьѢѣҌҍ:b;ÇçĆćĈĉĊċČčƇƈϲϹСсҪҫ:c;ÐĎďĐđƉƊƋƌȡɖɗ:d;ÈÉÊËèéêëĒēĔĕĖėĘęĚěȄȅȆȇȨȩɐΈΕЀЁЕеѐёҼҽҾҿӖӗ:e;Ƒƒƭ:f;ĜĝĞğĠġĢģƓɠɡɢʛԌԍ:g;ĤĥĦħȞȟʜɦʰʱΉΗНнћҢңҤҺһӇӈӉӊԊԋ:h;ÌÍÎÏìíîïĨĩĪīĬĭĮįİıƗȈȉȊȋɪΊΙΪϊії:i;ĴĵʲͿϳ:j;ĶķĸƘƙΚκϏЌКкќҚқҜҝҞҟҠҡԞԟ:k;ĹĺĻļĽľĿŀŁłȴɭʟӏ:l;ɱʍΜϺϻМмӍӎ:m;ÑñŃńŅņŇňŉŊŋƝƞȵɴΝηПп:n;ÒÓÔÕÖòóôõöŌōŎŏŐőơƢȌȍȎȏȪȫȬȭȮȯȰȱΌΟοόОоӦӧ:o;ƤΡρϼРр:p;ɊɋԚԛ:q;ŔŕŖŗŘřƦȐȑȒȓɌɍʀʳг:r;ŚśŜŝŞşŠšȘșȿЅѕ:s;ŢţŤťŦŧƫƬƮȚțͲͳΤТтҬҭ:t;ÙÚÛÜùúûŨũŪūŬŭŮůŰűŲųƯưƱȔȕȖȗ:u;ƔƲʋνυϋύΰѴѵѶѷ:v;ŴŵƜɯɰʷωώϢϣШЩшщѡѿԜԝ:w;ΧχХхҲҳӼӽ:x;ÝýÿŶŷŸƳƴȲȳɎɏʏʸΎΥΫϒϓϔЎУуўҮүӮӯӰӱӲӳ:y;ŹźŻżŽžƵƶȤȥʐʑΖ:z;o:0;∃э:3;➏:6;┑┐┓┑:7;╬╪:+';
+
+let prepareDelete={};
+const enablePoint=true;//是否在无房管权限时启动探针模式
+const EventPool={event_add_ban,event_add_point};
+let globalObserver=null;
+let intervalId=null;
+let isMaster=false;
 
 //初始化工作
 (async ()=>{
@@ -56,25 +63,39 @@ const ReplaceDictText='ÀÁÂÃÄÅàáâãäåĀāĂăĄąȀȁȂȃȦȧɑΆΑά�
     res=await res.json();
     if(res.code==0){
         if(res.data.room_admin.is_admin){
+            isMaster=true;
             main();
+            return;
         }else{
-            show('您还不是本房间的房管，装置已自动关闭！')
+            if(!enablePoint){
+                show('您还不是本房间的房管，装置已自动关闭！');
+                return;
+            }
         }
     }else{
         show('获取信息异常，请刷新页面重新获取！')
         console.log(res);
+        return;
     };
+    if(enablePoint){
+        main();
+    }
 })()
 
 //主运行函数
 function main() {
-    'use strict';
-    if(window.globalObserver)globalObserver.disconnect();
+    if(!isMaster){
+        show('当前开启探针模式');
+        sendMessage('event_add_point',{comeFrom:RoomShortID});
+    }
+    start();
+};
+function start(){//一键开启
+    if(globalObserver)globalObserver.disconnect();
     window.globalSaver={};
     window.ban_db=[];
     window.ban_db_window=[];
-    let prepareDelete={};
-    let globalObserver=new MutationObserver((mutations)=>{
+    globalObserver=new MutationObserver((mutations)=>{
         for(let i of mutations){
             if(i.addedNodes.length!=0){
                 doOne:for(let j of i.addedNodes){
@@ -86,18 +107,18 @@ function main() {
                             if(filterCheck(danmu))continue doOne;
                         }
                         // 例外规则结束
-                        for(let filterCheck of filterBanList){
-                            if(filterCheck(danmu,uid)){
-                                ban_user(uid,name,j.dataset.ct,j.dataset.ts);
-                                continue doOne;
-                            }
-                        }
                         if(!window.globalSaver[uid]){
                             window.globalSaver[uid]=[]
                         }
                         let nowtime=Date.now();
                         window.globalSaver[uid].push([nowtime,danmu]);
                         window.globalSaver[uid]=window.globalSaver[uid].filter((item)=>nowtime-item[0]<timeRange);
+                        for(let filterCheck of filterBanList){
+                            if(filterCheck(danmu,uid)){
+                                ban_user(uid,name,j.dataset.ct,j.dataset.ts);
+                                continue doOne;
+                            }
+                        }
                         // 查询语料库
                         if(useCorpus){
                             if(CorpusCheck_choice.check(danmu,uid)){
@@ -126,7 +147,7 @@ function main() {
     globalObserver.observe(document.body.querySelector('.chat-history-list'),{childList:true});
     show('机器人自动封禁装置，启动!');
     show(`设定定时任务：自动清理小本本 1次/${timeRange/1000}s`);
-    setInterval(()=>{
+    intervalId=setInterval(()=>{
         let nowtime=Date.now();
         count_clear++;
         for(let i in window.globalSaver){
@@ -136,28 +157,40 @@ function main() {
             }
         }
     },timeRange);
-    //内部函数
-    function ban_user(uid,name='',ct=null,ts=null){
-        if(prepareDelete[uid])return;
-        prepareDelete[uid]=true;
-        count_ban++;
-        show(`自动禁言${name}(${uid})`);
-        ts=ts||Date.now();
-        window.ban_db.push([Number(ts)*1000,name,uid,deepCopy(window.globalSaver[uid]),ct]);
-        fetch('https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user',
-              {method:'POST',
-               credentials: "include",
-               headers:{'Content-Type':'application/x-www-form-urlencoded'},
-               body:createFormData({roomid:RoomLongID,block_uid:uid,hour:720,csrf_token:csrf,csrf:csrf})})
-            .then(res=>res.json())
-            .then(res=>{
-            if(res.code==0){
-                //delete prepareDelete[uid];
-            }
-        })
-    }
-};
+}
+function stop(){//优雅关闭
+    if(globalObserver)globalObserver.disconnect();
+    if(intervalId)clearInterval(intervalId);
+    globalObserver=null;
+    clearInterval(intervalId);
+    show('机器人自动封禁装置已退出');
+}
 
+function ban_user(uid,name='',ct=null,ts=null,Saver=null){
+    if(prepareDelete[uid])return;
+    prepareDelete[uid]=true;
+    count_ban++;
+    show(`自动禁言${name}(${uid})`);
+    ts=ts||Date.now();
+    Saver=Saver||deepCopy(window.globalSaver[uid]);
+    if(!isMaster){
+        sendMessage('event_add_ban',{uid,name,ct,ts,Saver,comeFrom:RoomShortID});
+        show('已发送至主节点');
+        return;
+    }
+    window.ban_db.push([Number(ts)*1000,name,uid,Saver,ct]);
+    fetch('https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user',
+          {method:'POST',
+           credentials: "include",
+           headers:{'Content-Type':'application/x-www-form-urlencoded'},
+           body:createFormData({roomid:RoomLongID,block_uid:uid,hour:720,csrf_token:csrf,csrf:csrf})})
+        .then(res=>res.json())
+        .then(res=>{
+        if(res.code==0){
+            //delete prepareDelete[uid];
+        }
+    })
+}
 function compare(s1,s2) {
     let len1=s1.length,len2=s2.length;
     let d=[];
@@ -333,6 +366,7 @@ function CorpusCheck_special(maxlimit,uidcheck){//共享Corpus_base语料库
     CorpusCheck_base.call(this,maxlimit);
     let bak=this.check;
     this.check=function(danmu,uid){
+        danmu=deformate(danmu).replace(/#\D|\D#/g,'##');
         if(uid&&uidcheck&&!uidcheck(uid))return false;
         return bak.call(this,danmu)
     }
@@ -458,4 +492,58 @@ window.debug_autoban={
         window.ban_db=JSON.parse(localStorage.getItem('ban_db'))||[];
     },
     deformate:deformate
+}
+
+/*探针模块*/
+async function sendMessage(key,value){
+    let newKey='autobanEvent-'+key;
+    let newValue=JSON.stringify({data:value,timstamp:Date.now()});
+    await getLock('autobanWrite-'+newKey);
+    localStorage.setItem(newKey,newValue);
+    releaseLock('autobanWrite-'+newKey);
+};
+
+//注册事件锁
+function getLock(key,sleep=10,sleepMax=1000){
+    return new Promise((resolve,reject)=>{
+        let sleepNow=sleepMax;
+        if(!localStorage.hasOwnProperty(key)){
+            resolve(true);
+            return;
+        }
+        let waiter=setInterval(()=>{
+            if(!localStorage.hasOwnProperty(key)){
+                localStorage.setItem(key);
+                clearInterval(waiter);
+                resolve(true);
+            }
+            sleepNow-=10;
+            if(sleepNow<=0){
+                clearInterval(waiter);
+                reject(false);
+            }
+        },sleep)
+    })
+}
+function releaseLock(key){
+    localStorage.removeItem(key);
+}
+window.addEventListener("storage",function(ev){
+    if(!ev.newValue)return;
+    if(ev.key.match(/^autobanEvent-/g)){
+        let key=ev.key.replace(/^autobanEvent-/,'');
+        let value=JSON.parse(ev.newValue).data;
+        if(localStorage.hasOwnProperty(ev.key))localStorage.removeItem(ev.key);
+        if(EventPool[key]&&value)EventPool[key](value);
+    }
+})
+
+function event_add_ban({uid,name,ct,ts,Saver,comeFrom}){
+    if(!isMaster)return;
+    show(`收到来自房间${comeFrom}探针的封禁事件`);
+    ban_user(uid,name,ct,ts,Saver);
+}
+function event_add_point({comeFrom}){
+    if(!isMaster)return;
+    show(`来自房间${comeFrom}的探针已上线`)
 }
