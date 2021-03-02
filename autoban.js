@@ -478,6 +478,7 @@ window.autoban={
                 window.ban_db_window.push(temp);
             }
         }
+        this.addCorpus();
         window.ban_db=[];
         allAwait(waitArr).then((result)=>{easy_show('全部举报完毕');console.log(result)})
     }
