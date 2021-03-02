@@ -144,7 +144,7 @@ function start(){//一键开启
             }
         }
     });
-    globalObserver.observe(document.body.querySelector('.chat-history-list'),{childList:true});
+    globalObserver.observe(document.body.querySelector('#chat-items'),{childList:true});
     show('机器人自动封禁装置，启动!');
     show(`设定定时任务：自动清理小本本 1次/${timeRange/1000}s`);
     intervalId=setInterval(()=>{
@@ -173,12 +173,12 @@ function ban_user(uid,name='',ct=null,ts=null,Saver=null){
     show(`自动禁言${name}(${uid})`);
     ts=ts||Date.now();
     Saver=Saver||deepCopy(window.globalSaver[uid]);
+    window.ban_db.push([Number(ts)*1000,name,uid,Saver,ct]);
     if(!isMaster){
         sendMessage('event_add_ban',{uid,name,ct,ts,Saver,comeFrom:RoomShortID});
         show('已发送至主节点');
         return;
     }
-    window.ban_db.push([Number(ts)*1000,name,uid,Saver,ct]);
     fetch('https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user',
           {method:'POST',
            credentials: "include",
