@@ -442,7 +442,7 @@ function CorpusCheck_equal(){
 
 /*菜单函数*/
 window.autoban={
-    showBan:()=>{
+    showBan(){
         if(!window.ban_db.length){
             easy_show('暂无封禁记录哦~')
         }
@@ -450,14 +450,14 @@ window.autoban={
             easy_show(`用户名:${window.ban_db[i][1]} UID:${window.ban_db[i][2]} 封禁时间：${(new Date(window.ban_db[i][0])).toLocaleString()} 最后发言记录：${window.ban_db[i][3][window.ban_db[i][3].length-1][1]}`)
         }
     },
-    showStatus:()=>{
+    showStatus(){
         easy_show('感谢使用自动封禁装置!');
         easy_show(`装置启动时间：${(new Date(startTime)).toLocaleString()}`);
         easy_show(`累计弹幕入库次数: ${count_in}`);
         easy_show(`累计弹幕封禁次数: ${count_ban}`);
         easy_show(`累计库存清理次数: ${count_clear}`);
     },
-    clearUID:(uid)=>{
+    clearUID(uid){
         for(let i=window.ban_db.length-1;i>-1;i--){
             if(window.ban_db[i][2]==uid){
                 let user=window.ban_db.splice(i,1)[0];
@@ -467,8 +467,8 @@ window.autoban={
         }
         easy_show(`未找到UID为${uid}的封禁记录`);
     },
-    addCorpus:()=>{CorpusCheck_choice.addCorpus()},
-    allReport:()=>{
+    addCorpus(){CorpusCheck_choice.addCorpus()},
+    allReport(){
         let waitArr=[]
         for(let i in window.ban_db){
             waitArr.push(report(window.ban_db[i][2],window.ban_db[i][3][window.ban_db[i][3].length-1][1],window.ban_db[i][0]/1000,window.ban_db[i][4]));
