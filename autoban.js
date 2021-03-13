@@ -105,6 +105,7 @@ function start(){//一键开启
                         let uid=j.dataset.uid,name=j.dataset.uname,danmu=j.dataset.danmaku;
                         //压缩弹幕
                         danmu=danmu.replaceAll(ReplaceRegexp,"$1");
+                        if(danmu.length<=9)continue doOne;
                         // 例外规则
                         for(let filterCheck of filterList){
                             if(filterCheck(danmu))continue doOne;
