@@ -20,8 +20,8 @@
 
 const ban_limit=0.7;//弹幕相似率大于ban_limit时自动禁言
 let count_in=0,count_ban=0,count_clear=0;//弹幕入库次数、弹幕封禁次数、清理次数
-const startCheck=2;//timeRange内长弹幕数量大于startCheck开始检测（不含startCheck）
-const timeRange=20000;//只统计timeRange这段时间内的弹幕
+const startCheck=3;//timeRange内长弹幕数量大于startCheck开始检测（不含startCheck）
+const timeRange=10000;//只统计timeRange这段时间内的弹幕
 const useCorpus=true;//是否启用语料库
 const filterList=[filter1,filter2];//匹配过滤函数，若其中一个返回true都认为是正常弹幕，针对B站默认采用filter1与filter2
 const filterBanList=[ban_filter1,ban_filter2];
@@ -102,11 +102,12 @@ function start(){//一键开启
                 doOne:for(let j of i.addedNodes){
                     if(j.dataset.danmaku&&j.dataset.danmaku.length>9){
                         count_in++;
-                        let uid=j.dataset.uid,name=j.dataset.uname,danmu=j.dataset.danmaku;
+                        let uid=j.dataset.uid,name=j.dataset.uname,danmu=j.dataset.danmaku,ct=j.dataset.ct,ts=j.dataset.ts;
                         //压缩弹幕
                         danmu=danmu.replaceAll(ReplaceRegexp,"$1");
                         if(danmu.length<=9)continue doOne;
                         // 例外规则
+                        if((Date.now()-ts*1000)>timeRange)continue doOne;
                         for(let filterCheck of filterList){
                             if(filterCheck(danmu))continue doOne;
                         }
@@ -119,14 +120,14 @@ function start(){//一键开启
                         window.globalSaver[uid]=window.globalSaver[uid].filter((item)=>nowtime-item[0]<timeRange);
                         for(let filterCheck of filterBanList){
                             if(filterCheck(danmu,uid)){
-                                ban_user(uid,name,j.dataset.ct,j.dataset.ts);
+                                ban_user({uid,name,ct,ts,reason:'预过滤封禁'});
                                 continue doOne;
                             }
                         }
                         // 查询语料库
                         if(useCorpus){
                             if(CorpusCheck_choice.check(danmu,uid)){
-                                ban_user(uid,name,j.dataset.ct,j.dataset.ts);
+                                ban_user({uid,name,ct,ts,reason:'语料库封禁'});
                                 continue;
                             }
                         }
@@ -140,7 +141,7 @@ function start(){//一键开启
                                 if(i>2 && allcompare>ban_limit)break;
                             }
                             if(allcompare>ban_limit){
-                                ban_user(uid,name,j.dataset.ct,j.dataset.ts);
+                                ban_user({uid,name,ct,ts,reason:'时间范围内近似发言过多'});
                             }
                         }
                     }
@@ -170,16 +171,16 @@ function stop(){//优雅关闭
     show('机器人自动封禁装置已退出');
 }
 
-function ban_user(uid,name='',ct=null,ts=null,Saver=null){
+function ban_user({uid,name='',ct,ts,Saver,reason}){
     if(prepareDelete[uid])return;
     prepareDelete[uid]=true;
     count_ban++;
     show(`自动禁言${name}(${uid})`);
     ts=ts||Date.now();
     Saver=Saver||deepCopy(window.globalSaver[uid]);
-    window.ban_db.push([Number(ts)*1000,name,uid,Saver,ct]);
+    window.ban_db.push([Number(ts)*1000,name,uid,Saver,ct,reason]);
     if(!isMaster){
-        sendMessage('event_add_ban',{uid,name,ct,ts,Saver,comeFrom:RoomShortID});
+        sendMessage('event_add_ban',{uid,name,ct,ts,Saver,reason,comeFrom:RoomShortID});
         show('已发送至主节点');
         return;
     }
@@ -451,7 +452,7 @@ window.autoban={
             easy_show('暂无封禁记录哦~')
         }
         for(let i in window.ban_db){
-            easy_show(`用户名:${window.ban_db[i][1]} UID:${window.ban_db[i][2]} 封禁时间：${(new Date(window.ban_db[i][0])).toLocaleString()} 最后发言记录：${window.ban_db[i][3][window.ban_db[i][3].length-1][1]}`)
+            easy_show(`用户名:${window.ban_db[i][1]} UID:${window.ban_db[i][2]} 封禁时间：${(new Date(window.ban_db[i][0])).toLocaleString()} 最后发言记录：${window.ban_db[i][3][window.ban_db[i][3].length-1][1]} 原因：${window.ban_db[i][5]}`)
         }
     },
     showStatus(){
@@ -543,10 +544,10 @@ window.addEventListener("storage",function(ev){
     }
 })
 
-function event_add_ban({uid,name,ct,ts,Saver,comeFrom}){
+function event_add_ban({uid,name,ct,ts,Saver,reason,comeFrom}){
     if(!isMaster)return;
     show(`收到来自房间${comeFrom}探针的封禁事件`);
-    ban_user(uid,name,ct,ts,Saver);
+    ban_user({uid,name,ct,ts,Saver,reason});
 }
 function event_add_point({comeFrom}){
     if(!isMaster)return;
