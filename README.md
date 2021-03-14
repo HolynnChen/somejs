@@ -23,3 +23,7 @@
 **使用前提：**
 
 ![UTOOLS1562828013262.png](https://i.loli.net/2019/07/11/5d26dcef441eb74354.png)
+
+### TODO
+
+- 加入[simhash算法](https://github.com/vkandy/simhash-js)
