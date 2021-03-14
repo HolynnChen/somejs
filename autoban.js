@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         自动封禁装置，启动！
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  再见了！广告君
 // @author       holynnchen
 // @match        https://live.bilibili.com/*
