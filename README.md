@@ -15,6 +15,7 @@
 - autoban.clearUID(uid)  根据指定uid删除ban_db中数据
 - autoban.addCorpus()   将当前ban_db中每个uid的第一条发言不重复的放入当前语料库中
 - autoban.allReport()   一键举报所有被封禁用户，同时加入封禁窗口
+- autoban.stop()        关闭自动封禁装置
 
 相关配置均在脚本内进行修改即可，基础功能开箱即用。
 

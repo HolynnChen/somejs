@@ -447,6 +447,7 @@ function CorpusCheck_equal(){
 
 /*菜单函数*/
 window.autoban={
+    stop,
     showBan(){
         if(!window.ban_db.length){
             easy_show('暂无封禁记录哦~')
