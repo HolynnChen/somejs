@@ -1,6 +1,8 @@
 # 我编写的油猴脚本
 
 ## 自动封禁装置，启动！
+<details>
+
 ### autoban.js
 
 #### bilibili广告封禁脚本，针对日益猖狂的广告君开发此脚本，供房管使用
@@ -27,3 +29,13 @@
 ### TODO
 
 - 加入[simhash算法](https://github.com/vkandy/simhash-js)
+
+</details>
+
+## 翻译机
+<details>
+
+### translate.js
+  
+[详情可见](https://greasyfork.org/zh-CN/scripts/378277-%E7%BF%BB%E8%AF%91%E6%9C%BA)
+</details>
