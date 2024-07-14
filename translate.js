@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         翻译机
 // @namespace    http://tampermonkey.net/
-// @version      0.83
+// @version      0.84
 // @description  该脚本用于翻译各类常用社交网站为中文，不会经过中间服务器。
 // @author       HolynnChen
 // @match        *://*.twitter.com/*
@@ -169,7 +169,7 @@ function initPanel() {
     let open = document.createElement('div');
     open.style = `z-index:9999;height:35px;width:35px;background-color:#fff;position:fixed;border:1px solid rgba(0,0,0,0.2);border-radius:17.5px;right:${GM_getValue('position_right', '9px')};top:${GM_getValue('position_top', '9px')};text-align-last:center;color:#000000;display:flex;align-items:center;justify-content:center;cursor: pointer;font-size:15px;user-select:none;visibility: visible;`;
     open.innerHTML = p.createHTML("译");
-    open.onclick = () => {
+    const renderCurrentRule = ()=>{
         // 触发启用规则重建
         current_details.style.display = "none";
         current_details.innerHTML = "";
@@ -214,6 +214,9 @@ function initPanel() {
                 }
             }
         }
+    }
+    open.onclick = () => {
+        renderCurrentRule();
         mask.style.display = 'flex';
     };
     open.draggable = true;
@@ -222,7 +225,7 @@ function initPanel() {
     open.addEventListener("dragend", function (ev) { ev.stopImmediatePropagation(); GM_setValue("position_right", this.style.right); GM_setValue("position_top", this.style.top); document.body.removeChild(this.tempNode) });
     open.addEventListener("touchstart", ev => { ev.stopImmediatePropagation(); ev.preventDefault(); ev = ev.touches[0]; open._tempTouch = {}; const base = open.getClientRects()[0]; open._tempTouch.oldX = base.x + base.width - ev.clientX; open._tempTouch.oldY = base.y - ev.clientY });
     open.addEventListener("touchmove", ev => { ev.stopImmediatePropagation(); ev = ev.touches[0]; open.style.right = Math.max(window.innerWidth - open._tempTouch.oldX - ev.clientX, 0) + 'px'; open.style.top = Math.max(ev.clientY + open._tempTouch.oldY, 0) + 'px'; open._tempIsMove = true });
-    open.addEventListener("touchend", ev => { ev.stopImmediatePropagation(); GM_setValue("position_right", open.style.right); GM_setValue("position_top", open.style.top); if (!open._tempIsMove) { mask.style.display = 'flex' }; open._tempIsMove = false })
+    open.addEventListener("touchend", ev => { ev.stopImmediatePropagation(); GM_setValue("position_right", open.style.right); GM_setValue("position_top", open.style.top); if (!open._tempIsMove) { renderCurrentRule();mask.style.display = 'flex' }; open._tempIsMove = false })
     shadow.appendChild(open);
     shadow.querySelector('.js_translate option[value=' + choice + ']').selected = true;
     if (fullscrenn_hidden) window.top.document.addEventListener('fullscreenchange', () => { open.style.display = window.top.document.fullscreenElement ? "none" : "flex" });
